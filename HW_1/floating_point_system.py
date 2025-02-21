@@ -9,7 +9,7 @@ class FloatingPointSystem():
 
     def __get_exponent(self, x):
         i = self.L
-        while self.beta**i < abs(x) and i < self.U:
+        while self.beta**(i + 1) < abs(x) and i < self.U:
             i = i + 1
         return i
     
@@ -24,10 +24,15 @@ class FloatingPointSystem():
         i = 0
         x = abs(x)
 
+        # ensure first digit is at least 1
+        M[0] = 1
+        x -= self.beta**e
+
         while x > 0 and i < self.p:
-            M[i] = M[i] + 1
-            x -= self.beta**e
-            if x - self.beta**e < 0:
+            if x - self.beta**e >= 0 and M[i] < self.beta - 1:
+                M[i] = M[i] + 1
+                x -= self.beta**e
+            else:
                 e -= 1
                 i += 1
         return M
@@ -35,52 +40,48 @@ class FloatingPointSystem():
     def fl_ch(self, x: float):
         E = self.__get_exponent(x)
         M = self.__get_mantissa_ch(x, E)
-        return np.sign(x) * self.__compute_fl(M, E)
+        return self.__compute_fl(M, E)
     
-    def __add_val_to_mantissa(self, M, v, pos):
-        if M[pos] + v < self.beta:
-            M[pos] += v
-            return M
-        elif pos == 0:
-            return ValueError("Overflow")
-        else:
-            M[pos] = v % self.beta
-            return self.__add_val_to_mantissa(self, M, v // self.beta, pos - 1)
-    
-    def __get_mantissa_rn(self, x, e):
+    def fl_rn(self, x):
+        e = self.__get_exponent(x)
         M_low = self.__get_mantissa_ch(x, e)
-        M_high = np.copy(M_low)
-        M_high = self.__add_val_to_mantissa(M_high, self.p - 1, 1)
-
         fl_low = self.__compute_fl(M_low, e)
-        fl_high = self.__compute_fl(M_high, e)
-        
-        if abs(x - fl_low) > abs(x - fl_high):
-            return M_high
+        m_numbers = self.get_machine_numbers()
+        higher_m_numbers = [n for n in m_numbers if n > fl_low]
+        if len(higher_m_numbers) == 0:
+            fl_high = fl_low
         else:
-            return M_low
-        
-    def fl_rn(self, x:float):
-        E = self.__get_exponent(x)
-        M = self.__get_mantissa_rn(x, E)
-        return np.sign(x) * self.__compute_fl(M, E)
+            fl_high = min(higher_m_numbers)
+
+        if abs(x - fl_low) > abs(x - fl_high):
+            return fl_high
+        else:
+            return fl_low
     
     def __get_m_numbers_for_exponent(self, E, pos):
+        '''Run with initial values E and 0.''' 
         m_numbers = []
-        if E < self.L - self.p + 1 or pos > self.p:
+        if E < self.L - self.p + 1 or pos > self.p - 1:
             return [0]
         else:
             for i in range(1, self.beta):
                  m_numbers.extend([i * self.beta**(E) + x for x in self.__get_m_numbers_for_exponent(E-1, pos + 1)])
-            if pos > 1:
+            if pos > 0:
                 m_numbers.extend(self.__get_m_numbers_for_exponent(E-1, pos + 1))
             return m_numbers
 
     def get_machine_numbers(self):
         m_numbers = []
         for E in range(self.L, self.U + 1):
-            m_numbers.extend(self.__get_m_numbers_for_exponent(E, 1))
+            m_numbers.extend(self.__get_m_numbers_for_exponent(E, 0))
         m_numbers = set(m_numbers)
         return m_numbers
+    
+    def get_min(self):
+        return self.beta**self.L
+
+    def get_max(self):
+        M = np.ones(self.p) * (self.beta - 1)
+        return self.__compute_fl(M, self.U)
 
         

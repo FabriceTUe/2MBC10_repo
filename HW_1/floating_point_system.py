@@ -1,5 +1,4 @@
 import numpy as np
-from decimal import Decimal
 
 class FloatingPointSystem():
     def __init__(self, beta, p, L, U):
@@ -10,46 +9,78 @@ class FloatingPointSystem():
 
     def __get_exponent(self, x):
         i = self.L
-        while self.beta**i < abs(x):
+        while self.beta**i < abs(x) and i < self.U:
             i = i + 1
         return i
+    
+    def __compute_fl(self, m, e):
+        fl = 0
+        for i in range(self.p):
+            fl += m[i] * self.beta**(e - i)
+        return fl
 
-    def __number_to_base(self, x):
-        if x == 0:
-            return [0]
-        digits = []
-        while x:
-            digits.append(int(x % self.beta))
-            x //= self.beta
-        return digits[::-1]
+    def __get_mantissa_ch(self, x, e):
+        M = np.zeros(self.p, dtype=int)
+        i = 0
+        x = abs(x)
 
-    def __dec_number_to_digits(self, x):
-        v = format(x, "e")
-        if '+' in v:
-            power = v.split('+')[1]
-            power = int(power)
-        else:
-            power = v.split('-')[1]
-            power = int(power) -1
-        x = float(v.split('e')[0])
-        x = int(x * (10**power))
-        return x
+        while x > 0 and i < self.p:
+            M[i] = M[i] + 1
+            x -= self.beta**e
+            if x - self.beta**e < 0:
+                e -= 1
+                i += 1
+        return M
 
-    def __get_mantissa(self, x):
-        x = self.__dec_number_to_digits(x)
-        print(x)
-
-        str_rep = self.__number_to_base(x)
-        print(str_rep)
-
-        digits = []
-        for i in range(min(self.p, len(str_rep))):
-            d = str_rep[i]
-            digits.append(int(d))
-        for i in range(len(str_rep), self.p):
-            digits.append(int(0))
-        return np.array(digits)
-
-    def fl_ch(self, x):
-        mantissa = self.__get_mantissa(x)
+    def fl_ch(self, x: float):
         E = self.__get_exponent(x)
+        M = self.__get_mantissa_ch(x, E)
+        return np.sign(x) * self.__compute_fl(M, E)
+    
+    def __add_val_to_mantissa(self, M, v, pos):
+        if M[pos] + v < self.beta:
+            M[pos] += v
+            return M
+        elif pos == 0:
+            return ValueError("Overflow")
+        else:
+            M[pos] = v % self.beta
+            return self.__add_val_to_mantissa(self, M, v // self.beta, pos - 1)
+    
+    def __get_mantissa_rn(self, x, e):
+        M_low = self.__get_mantissa_ch(x, e)
+        M_high = np.copy(M_low)
+        M_high = self.__add_val_to_mantissa(M_high, self.p - 1, 1)
+
+        fl_low = self.__compute_fl(M_low, e)
+        fl_high = self.__compute_fl(M_high, e)
+        
+        if abs(x - fl_low) > abs(x - fl_high):
+            return M_high
+        else:
+            return M_low
+        
+    def fl_rn(self, x:float):
+        E = self.__get_exponent(x)
+        M = self.__get_mantissa_rn(x, E)
+        return np.sign(x) * self.__compute_fl(M, E)
+    
+    def __get_m_numbers_for_exponent(self, E, pos):
+        m_numbers = []
+        if E < self.L - self.p + 1 or pos > self.p:
+            return [0]
+        else:
+            for i in range(1, self.beta):
+                 m_numbers.extend([i * self.beta**(E) + x for x in self.__get_m_numbers_for_exponent(E-1, pos + 1)])
+            if pos > 1:
+                m_numbers.extend(self.__get_m_numbers_for_exponent(E-1, pos + 1))
+            return m_numbers
+
+    def get_machine_numbers(self):
+        m_numbers = []
+        for E in range(self.L, self.U + 1):
+            m_numbers.extend(self.__get_m_numbers_for_exponent(E, 1))
+        m_numbers = set(m_numbers)
+        return m_numbers
+
+        

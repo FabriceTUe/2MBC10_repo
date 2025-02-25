@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from floating_point_system import FloatingPointSystem
 
 class Plotter:
@@ -30,11 +31,13 @@ class Plotter:
         plt.scatter(machine_numbers, machine_numbers, color='r', marker='o')
         plt.axvline(fl_sys.get_min(), color='black', label="min")
         plt.axvline(fl_sys.get_max(), color='black', label="max")
+        plt.axvspan(range[0], fl_sys.get_min(), color='red', alpha = 0.4, label='Underflow')
+        plt.axvspan(fl_sys.get_max(), range[1], color='red', alpha = 0.4, label='Overflow')
         plt.xlabel("x")
         plt.ylabel("Floating-point approximation of x")
         plt.title("Floating point representations for {0} on (0,7)".format(name))
         loc = "lower right"
-        plt.legend(["Chopping", "Rounding to nearest", "Machine numbers", "Min/max machine number"], loc=loc)
+        plt.legend(["Chopping", "Rounding to nearest", "Machine numbers", "Min machine number", "Max machine number", "Underflow/overflow"], loc=loc)
         plt.savefig("figures/{0}_1.png".format(name))
 
         abs_error_ch = Plotter.get_abs_error(fl_ch, x_axis)

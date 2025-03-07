@@ -1,6 +1,6 @@
 from floating_point_system import FloatingPointSystem
 
 # driver code:
-fl_sys = FloatingPointSystem(2, 2, -1, 1)
+fl_sys = FloatingPointSystem(8, 5, -2, 2)
 
-print(fl_sys.fl_rn(1.3))
+print(len(fl_sys.get_machine_numbers()))

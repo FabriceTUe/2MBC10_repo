@@ -1,6 +1,7 @@
 from lagrange_interpolation import LagrangeInterpolant
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 def get_uniform_nodes(n: int):
     # get x and y from function:
@@ -51,7 +52,53 @@ def generate_plots(chebyshev: bool):
     plt.savefig("{0}_plot_for_q1.png".format(phrase))
     plt.figure()
 
+def get_nodes_factor_for_x(x, nodes):
+    factor = 1
+    for i in range(len(nodes)):
+        factor *= (x - nodes[i])
+    return np.abs(factor)
 
-# actually execute the code:
-generate_plots(False)
-generate_plots(True)
+def plot_nodes_factor(chebyshev):
+    for n in [6, 10, 14]:
+        if chebyshev:
+            x_list, _ = get_chebyshev_nodes(n)
+        else:
+            x_list, _ = get_uniform_nodes(n)
+        x_axis = np.linspace(x_list[0], x_list[-1], 400)
+        factor_values = []
+        for x in np.nditer(x_axis):
+            factor_values.append(get_nodes_factor_for_x(x, x_list))
+        plt.plot(x_axis, factor_values, label="Factor for n = {0}".format(n))
+    plt.show()
+    
+def get_max_error_direct(n, chebyshev):
+    if chebyshev:
+        x_list, y_list = get_chebyshev_nodes(n)
+    else:
+        x_list, y_list = get_uniform_nodes(n)
+    lagrange_interpolant = LagrangeInterpolant(x_list, y_list)
+    x_vals_to_test = np.linspace(x_list[0], x_list[-1], 10**6)
+    max = 0
+    for x in np.nditer(x_vals_to_test):
+        f_val = 1 / (1 + 25 * x**2)
+        error = np.abs(lagrange_interpolant.evaluate(x) - f_val)
+        if error > max:
+            max = error
+    return max
+    
+
+
+# generate plots:
+#generate_plots(False)
+#generate_plots(True)
+
+# get uniform max error for various n:
+print("uniform:")
+print(get_max_error_direct(6, False))
+print(get_max_error_direct(10, False))
+print(get_max_error_direct(14, False))
+
+print("chebyshev:")
+print(get_max_error_direct(6, True))
+print(get_max_error_direct(10, True))
+print(get_max_error_direct(14, True))

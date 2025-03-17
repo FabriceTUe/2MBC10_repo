@@ -9,15 +9,15 @@ def f(x):
     return factor_1 * factor_2
 
 #a
-print(Integrator.integrate_composite(f, -sigma, sigma, Integrator.simpson, 10**6))
+print(Integrator.integrate_composite(f, -sigma, sigma, Integrator.right_rectangle_rule, 10**7))
 #b
-print(Integrator.integrate_composite(f, -2 * sigma, 2 * sigma, Integrator.simpson, 10**6))
+print(Integrator.integrate_composite(f, -2 * sigma, 2 * sigma, Integrator.right_rectangle_rule, 10**7))
 #c
-print(Integrator.integrate_composite(f, -3 * sigma, 3 * sigma, Integrator.simpson, 10**6))
+print(Integrator.integrate_composite(f, -3 * sigma, 3 * sigma, Integrator.right_rectangle_rule, 10**7))
 
 # 3.2:
 def g(x):
     y = 9 * (np.sin(x))**2 + 4 * (np.cos(x))**2
     return np.sqrt(y)
 
-print(Integrator.integrate_composite(g, 0, 2 * np.pi, Integrator.simpson, 10**6))
+print(Integrator.integrate_composite(g, 0, 2 * np.pi, Integrator.right_rectangle_rule, 10**8))

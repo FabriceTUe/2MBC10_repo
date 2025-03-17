@@ -9,6 +9,10 @@ class Integrator:
         return factor_1 * factor_2
 
     @staticmethod
+    def right_rectangle_rule(f, x_0, x_1):
+        return (x_1 - x_0) * f(x_1)
+
+    @staticmethod
     def integrate_composite(f, x_0, x_1, quadrature_rule, granularity, open = False):
         if not open:
             points = np.linspace(x_0, x_1, granularity + 1)

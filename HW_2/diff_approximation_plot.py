@@ -13,7 +13,8 @@ def get_data_for_n(n, epsilon):
         M = 1
     truncation_err = (M * h) / 2
     round_off_err = (2 * epsilon) / h
-    tot_err = truncation_err + round_off_err
+    approximation = (f(1 + h) - f(1)) / h
+    tot_err = np.abs(approximation - np.cos(1))
     return truncation_err, round_off_err, tot_err
 
 def plot(min_n, max_n, epsilon):

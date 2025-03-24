@@ -33,8 +33,8 @@ def plot(min_n, max_n, epsilon):
     plt.plot(n_values, tot_errs, label="Total error")
     plt.yscale('log')
     plt.legend()
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("n")
+    plt.ylabel("error")
 
     plt.savefig("diff_plot.png")
 
